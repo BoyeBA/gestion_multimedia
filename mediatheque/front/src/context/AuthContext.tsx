@@ -13,6 +13,7 @@ interface AuthContextType {
   user: User | null;
   login: (token: string, user: User) => void;
   logout: () => void;
+  register: (data: { name: string; email: string; password: string }) => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -49,21 +50,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [token]);
 
+  const register = async ({ name, email, password }: { name: string; email: string; password: string }) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Échec de l’inscription');
+      }
+
+      const data = await response.json();
+      const { token, user } = data;
+
+      login(token, user); 
+    } catch (error) {
+      throw error;
+    }
+  };
+
+
   const value = {
     token,
     user,
     login,
     logout,
+    register,
     isAuthenticated: !!token,
   };
+
+
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
+function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}
+
+export { useAuth };

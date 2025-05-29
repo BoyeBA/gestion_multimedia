@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 const db = new Database({
   url: 'http://localhost:8529',
   databaseName: 'art_db',
-  auth: { username: 'root', password: 'root' }
+  auth: { username: 'root', password: '' }
 });
 
 async function testConnection() {
@@ -74,6 +74,9 @@ async function verifyCredentials(email, password) {
     if (!user) return { valid: false };
     
     const valid = await bcrypt.compare(password, user.password);
+    if(!valid){
+      return {'error': 'Erreurrrrrrrrrrr'};
+    }
     return { valid, user };
   } catch (err) {
     console.error('Erreur vérification:', err);
@@ -81,10 +84,36 @@ async function verifyCredentials(email, password) {
   }
 }
 
+
+async function createUser(userData) {
+  const hashedPassword = await bcrypt.hash(userData.password, 10);
+  const user = {
+    ...userData,
+    password: hashedPassword,
+    createdAt: new Date().toISOString(),
+    role: "user",
+  };
+
+  const result = await db.collection("users").save(user);
+  return { ...user, _key: result._key, password: undefined };
+}
+
+async function findUserByEmail(email) {
+  const cursor = await db.query(aql`
+    FOR user IN users
+    FILTER user.email == ${email}
+    RETURN user
+  `);
+  return cursor.next();
+}
+
+
 export { 
   db, 
   aql, 
   testConnection, 
   initCollections,
-  verifyCredentials 
+  verifyCredentials,
+  findUserByEmail,
+  createUser
 };

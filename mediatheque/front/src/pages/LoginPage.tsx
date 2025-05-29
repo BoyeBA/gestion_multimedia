@@ -4,10 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { LockClosedIcon, EnvelopeIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import Swal from 'sweetalert2';
 import { motion } from 'framer-motion';
+import  axios  from 'axios';
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('namoudouba851@gmail.com');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,18 +22,10 @@ const LoginPage: React.FC = () => {
 
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const mockResponse = {
-        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        user: {
-          id: 1,
-          name: 'Namoudou Ba',
-          email: 'namoudouba851@gmail.com',
-          role: 'student'
-        }
-      };
 
-      login(mockResponse.token, mockResponse.user);
+      const res = await axios.post('http://localhost:3000/api/auth/login', { email, password });
+      login(res.data.token, res.data.user);
+
 
       await Swal.fire({
         title: 'Connexion réussie !',
@@ -48,7 +41,7 @@ const LoginPage: React.FC = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Identifiants incorrects';
       setError(errorMessage);
-      
+
       await Swal.fire({
         title: 'Erreur',
         text: errorMessage,
@@ -154,9 +147,8 @@ const LoginPage: React.FC = () => {
                 disabled={isLoading}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-md font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${
-                  isLoading ? 'opacity-70 cursor-not-allowed' : ''
-                }`}
+                className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-md font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
               >
                 {isLoading ? (
                   <>
