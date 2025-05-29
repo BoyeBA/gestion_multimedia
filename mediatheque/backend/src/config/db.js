@@ -6,7 +6,7 @@ const db = new Database({
   databaseName: process.env.ARANGO_DB || "art_db",
   auth: {
     username: process.env.ARANGO_USER || "root",
-    password: process.env.ARANGO_PASSWORD || "root",
+    password: process.env.ARANGO_PASSWORD || "",
   },
 });
 

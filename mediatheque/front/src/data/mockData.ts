@@ -1,6 +1,6 @@
 import { Author, Theme, Influence, Work } from '../types';
-import AminaImage from './images/amina.jpg'; // 🔁 Importation correcte
-import NdiameImage from './images/ndiame.jpg';
+import AminaImage from './images/Amina.jpg';
+import NdiameImage from './images/Ndiame.jpg';
 import MamoudouImage from './images/mamoudou.jpg';
 import IbrahimaImage from './images/ibrahima.jpg';
 export const authors: Author[] = [
