@@ -1,50 +1,34 @@
 import express from 'express';
-import cors from 'cors';
-import jwt from 'jsonwebtoken';
-import { initCollections, verifyCredentials } from './arangoConfig.js';
-
+import { Database } from 'arangojs';
 const app = express();
-app.use(cors());
-app.use(express.json());
+const db = new Database({ url: "http://localhost:8529" });
+db.useDatabase("art_db");
+db.useBasicAuth("root", "root");
 
-// Initialisation
-initCollections().then(() => {
-  console.log('📦 Collections prêtes');
-});
-
-// Authentification
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const { valid, user } = await verifyCredentials(email, password);
-    
-    if (!valid) {
-      return res.status(401).json({ error: 'Identifiants invalides' });
-    }
-
-    const token = jwt.sign(
-      { userId: user._key, email: user.email },
-      'votre_secret_jwt',
-      { expiresIn: '24h' }
-    );
-
-    res.json({
-      token,
-      user: {
-        _key: user._key,
-        email: user.email,
-        name: user.name,
-        role: user.role
+app.get('/api/works', async (req, res) => {
+  const query = `
+    FOR w IN works
+      LET author = DOCUMENT(CONCAT("authors/", w.authorId))
+      LET themes = (
+        FOR t IN work_theme_relations
+          FILTER t._from == w._id
+          RETURN DOCUMENT(t._to)
+      )
+      LET influences = (
+        FOR i IN work_influence_relations
+          FILTER i._from == w._id
+          RETURN DOCUMENT(i._to)
+      )
+      RETURN {
+        ...w,
+        author,
+        themes,
+        influences
       }
-    });
-  } catch (err) {
-    console.error('Erreur login:', err);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
+  `;
+  const cursor = await db.query(query);
+  const result = await cursor.all();
+  res.json(result);
 });
 
-// Démarrer le serveur
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
-});
+app.listen(3001, () => console.log("API sur http://localhost:3001"));
